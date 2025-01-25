@@ -23,8 +23,12 @@ setlocal enabledelayedexpansion
 
 :: Define o nome do arquivo e URL para download
 set "dll_name=nvngx_dlss.dll"
+set "temp_folder=%cd%\temp"
+set "downloaded_file=%temp_folder%\%dll_name%"
 set "download_url=https://raw.githubusercontent.com/bernaction/dlss4-updater/main/nvngx_dlss.dll"
-set "downloaded_file=%cd%\%dll_name%"
+
+:: Cria a pasta temporária se ela não existir
+if not exist "%temp_folder%" mkdir "%temp_folder%"
 
 :: Variáveis auxiliares
 set "found_files="
@@ -38,7 +42,7 @@ echo ===============================
 echo -
 echo Procurando o arquivo "%dll_name%" no diretorio atual e subpastas...
 for /r %%i in (%dll_name%) do (
-    if exist "%%i" (
+	if not "%%~dpi"=="%temp_folder%\\" if exist "%%i" (
         set "found_files=!found_files! "%%i";"
         for /f "tokens=*" %%j in ('powershell -command "& {(Get-Item '%%i').VersionInfo.FileVersion}"') do (
             set "found_versions=!found_versions!%%j;"
@@ -60,11 +64,8 @@ echo Encontrado.
 echo -
 echo Fazendo download do arquivo "%dll_name%" na pasta atual...
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%download_url%', '%downloaded_file%')"
-
-:: Verifica a versão do arquivo baixado
 set "new_version="
 for /f "tokens=*" %%k in ('powershell -command "& {(Get-Item '%downloaded_file%').VersionInfo.FileVersion}"') do set "new_version=%%k"
-
 echo Nova versao NVIDIA DLSS: %new_version%
 echo -
 
@@ -105,7 +106,9 @@ for %%i in (!found_files!) do (
     )
 )
 
-echo -
+:: Limpeza final
+if exist "%downloaded_file%" del "%downloaded_file%"
+rmdir /s /q "%temp_folder%"
 echo -
 echo -
 echo Operacao concluida.
