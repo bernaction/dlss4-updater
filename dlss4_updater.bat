@@ -31,6 +31,12 @@ set "found_files="
 set "found_versions="
 
 :: Procura o arquivo nas subpastas
+cls
+echo ===============================
+echo  ATUALIZADOR NVIDIA DLSS4    
+echo ===============================
+echo -
+echo Procurando o arquivo "%dll_name%" no diretorio atual e subpastas...
 for /r %%i in (%dll_name%) do (
     if exist "%%i" (
         set "found_files=!found_files! "%%i";"
@@ -42,16 +48,16 @@ for /r %%i in (%dll_name%) do (
 
 :: Verifica se encontrou algum arquivo
 if "!found_files!"=="" (
-    echo Nenhum arquivo "%dll_name%" foi encontrado no diretorio atual e suas subpastas.
+    echo Nenhum arquivo "%dll_name%" foi encontrado.
+	echo Finalizando o script.
+	echo -
     pause
     exit /b
 )
 
 :: Faz o download do arquivo na pasta atual
-cls
-echo ===============================
-echo  ATUALIZADOR NVIDIA DLSS4    
-echo ===============================
+echo Encontrado.
+echo -
 echo Fazendo download do arquivo "%dll_name%" na pasta atual...
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%download_url%', '%downloaded_file%')"
 
@@ -59,7 +65,8 @@ powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%download_u
 set "new_version="
 for /f "tokens=*" %%k in ('powershell -command "& {(Get-Item '%downloaded_file%').VersionInfo.FileVersion}"') do set "new_version=%%k"
 
-echo Versao baixada do NVIDIA DLSS: %new_version%
+echo Nova versao NVIDIA DLSS: %new_version%
+echo -
 
 
 :: Pergunta para atualizar cada arquivo encontrado
@@ -69,20 +76,22 @@ for %%i in (!found_files!) do (
     for /f "delims=;" %%v in ("!found_versions!") do (
         set "current_version=%%v"
         set "found_versions=!found_versions:%%v;=!"
+		echo -------------------------------------------------
         echo Arquivo %index%:
-        echo Local: !current_file!
+        echo DLL encontrada no local: 
+		echo !current_file!
         echo Versao atual: !current_version!
-        echo -------------------------------------------------
-        
         :ask_choice
         set "choice="
+		echo -
         set /p "choice=Deseja atualizar este arquivo? [S/N]: "
         if /i "!choice!"=="S" (
             echo Criando backup e atualizando...
             if exist "!current_file!" (
                 ren "!current_file!" "!dll_name!.old"
                 copy "%downloaded_file%" "!current_file!"
-                echo Arquivo atualizado com sucesso. Backup criado como "!dll_name!.old".
+                echo Arquivo atualizado com sucesso.
+				echo Backup criado como "!dll_name!.old".
             ) else (
                 echo O arquivo "!current_file!" nao foi encontrado para renomeacao.
             )
@@ -96,7 +105,8 @@ for %%i in (!found_files!) do (
     )
 )
 
-:: Limpeza final
-if exist "%downloaded_file%" del "%downloaded_file%"
+echo -
+echo -
+echo -
 echo Operacao concluida.
 pause
